@@ -1,53 +1,19 @@
 'use strict';
 
-const net = require("net");
+const net = require('net');
 const port = 3000;
-const server = net.chatroomServer();
+const server = net.createServer();
+const User = require('./chatroom.js');
 
-let socketPool = [];
+server.on('connection', (socket) => { 
+    let user = new User(socket);
 
-// function Message (buffer){
-//     this.buffer = buffer
+    user.commands(user);
 
-// }
-
-server.on('connection', (socket) => {
-    
-    socket.username = `User ${Math.random()}`;
-
-    socketPool = [...socketPool, socket];
-
-    socket.on("data", (buffer) => {
-        
-        let text = buffer.toString(); 
-        
-        if (text.startsWith("/nickname")) {
-            socket.username = text.trim().split(" ").slice(1).join(" ");
-            //code
-        }
-
-        if (text.startsWith("/dm")) {
-            let message = text.trim().split(" ").slice(1).join(" ");
-            //code
-        }
-
-        if (text.startsWith("/quit")) {
-            socket.destroy();
-            console.log( `${socket.username} has left the room`);//if this is ends up being a general message to the chat room
-            console.log( `${socket.username}, your chat session has ended`);//if this is ends up being a general message to the user
-        }
-
-        console.log(socket.username, ":", text);
-
-        socketPool.forEach(function(connection) {
-            connection.write(text);
-        });
-
-
-
-    })
+    user.socket.on('error', err => console.log(err));
+    user.socket.on('disconnect', () => console.log(user.username + ' has left the room.\r'));    
 });
 
 server.listen(port, () => {
-    console.log("Alive on port", port);
+    console.log('Server on port', port);
 });
